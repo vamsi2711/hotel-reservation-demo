@@ -13,6 +13,7 @@ class DescribeAvailableRoomsResolver:
         rooms = [
             Room(
                 id=f"room_{i}",
+                room_number=i * 100,
                 num_beds=i * 2,
                 allow_smoking=True if i % 2 == 0 else False,
                 daily_rate=int(i * 140),

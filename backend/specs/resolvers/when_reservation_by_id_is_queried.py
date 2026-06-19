@@ -40,5 +40,5 @@ class DescribeGetReservationResolver:
         )
 
         assert "reservation" in result
-        assert len(result["reservation"]) == 1
-        assert result["reservation"] == expected_reservation
+        assert result["reservation"] is not None
+        assert result["reservation"] == expected_reservation[0]
