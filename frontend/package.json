@@ -33,7 +33,7 @@
   "devDependencies": {
     "@babel/core": "^7.29.7",
     "@babel/plugin-syntax-jsx": "^8.0.1",
-    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-env": "^8.0.2",
     "@babel/preset-react": "^8.0.1",
     "axios-mock-adapter": "^2.1.0",
     "@testing-library/jest-dom": "^6.9.1",
