@@ -22,7 +22,7 @@
     "react-bootstrap": "^2.10.9",
     "react-dom": "^18.2.0",
     "react-redux": "^9.3.0",
-    "react-router-dom": "6",
+    "react-router-dom": "7",
     "recharts": "^3.8.1",
     "redux": "^5.0.1",
     "redux-first-history": "^5.2.0",
