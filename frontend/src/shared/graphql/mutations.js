@@ -27,3 +27,12 @@ export const deleteReservationMutation = `
       }
     }
   }`;
+
+export const updateReservationMutation = `
+  mutation updateReservation($reservationId: Int!, $input: UpdateReservationInput!) {
+    updateReservation(reservationId: $reservationId, input: $input) {
+      success
+      errors
+      reservation { id room_id checkin_date checkout_date total_charge }
+    }
+  }`;

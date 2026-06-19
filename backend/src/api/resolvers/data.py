@@ -21,7 +21,7 @@ async def create_reservation(
     room_result = await fetch_room(db, room_id)
     room = room_result["room"][0]
     daily_rate = room.daily_rate
-    total_charge = calculate_total_charge(daily_rate, checkin_date, checkout_date)
+    total_charge = calculate_total_charge(daily_rate, room.cleaning_fee, checkin_date, checkout_date)
 
     reservation_insert_query = """
             INSERT INTO reservations
@@ -110,6 +110,28 @@ async def fetch_room(db, room_id: str) -> Room:
         return result
     else:
         raise ValueError(f"Room with id {room_id} not found")
+
+
+async def update_reservation(
+    db, reservation_id: int, room_id: str, checkin_date: datetime, checkout_date: datetime
+) -> Dict[str, Any]:
+    await fetch_reservation(db, reservation_id)
+
+    room_result = await fetch_room(db, room_id)
+    room = room_result["room"][0]
+    total_charge = calculate_total_charge(room.daily_rate, room.cleaning_fee, checkin_date, checkout_date)
+
+    await db.execute(
+        "UPDATE reservations SET room_id=$1, checkin_date=$2, checkout_date=$3, total_charge=$4 WHERE id=$5",
+        room_id, checkin_date, checkout_date, total_charge, reservation_id,
+    )
+    result = await fetch_reservation(db, reservation_id)
+    reservation_list = result.get("reservation", [])
+    return {
+        "success": True,
+        "errors": None,
+        "reservation": reservation_list[0] if reservation_list else None,
+    }
 
 
 async def fetch_reservation(db, reservation_id: int):

@@ -1,10 +1,17 @@
-import { actionTypes, createComponentReducer } from '@/shared/base';
+import { actionTypes, createComponentReducer, onSuccessful } from '@/shared/base';
 
 const initialState = {
+  reservation: null,
   loading: true,
 };
 
-const actionHandlers = {};
+const actionHandlers = {
+  [onSuccessful(actionTypes.GET_RESERVATION)]: (state, action) => ({
+    ...state,
+    reservation: action?.response?.data || null,
+    loading: false,
+  }),
+};
 
 const reducer = createComponentReducer(
   actionTypes.SHOW_RESERVATION_COMPONENT,

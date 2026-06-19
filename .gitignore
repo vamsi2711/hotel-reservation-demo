@@ -170,3 +170,4 @@ package-lock.json
 logs/*
 
 frontend/coverage/
+env.sh

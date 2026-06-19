@@ -1,42 +1,30 @@
 import { call, takeLatest, put } from 'redux-saga/effects';
 
 import { actionTypes, onFailure, onSuccessful } from '@/shared/base';
-import { fetchQuery, getRoomIdsQuery } from '@/shared/graphql';
+import { fetchQuery, getAllRoomsQuery } from '@/shared/graphql';
 
 export function* getAllRoomIds() {
   try {
-    const variables = {};
-    const response = yield call(fetchQuery, getRoomIdsQuery, variables);
+    const response = yield call(fetchQuery, getAllRoomsQuery, {});
     const data = response?.data;
     const errors = data?.getAllRooms?.errors;
 
     if (errors)
-      throw new Error(
-        `getallreservations-saga-error:  ${JSON.stringify(errors)}`,
-      );
-    else {
-      const { rooms } = data.getAllRooms || [];
-      const roomIds = rooms?.map((room) => room.id);
+      throw new Error(`getallrooms-saga-error: ${JSON.stringify(errors)}`);
 
-      yield put({
-        type: onSuccessful(actionTypes.GET_ROOM_IDS),
-        response: {
-          data: roomIds,
-        },
-      });
-    }
+    const { rooms } = data.getAllRooms || {};
+    yield put({
+      type: onSuccessful(actionTypes.GET_ROOM_IDS),
+      response: { data: rooms },
+    });
   } catch (ex) {
-    const message = `Could not retrieve room identifiers:  ${ex}`;
+    const message = `Could not retrieve rooms: ${ex}`;
     yield put({
       type: onFailure(actionTypes.GET_ROOM_IDS),
       alertType: 'danger',
       message,
     });
-    yield put({
-      type: actionTypes.SET_ALERT,
-      alertType: 'danger',
-      message,
-    });
+    yield put({ type: actionTypes.SET_ALERT, alertType: 'danger', message });
   }
 }
 

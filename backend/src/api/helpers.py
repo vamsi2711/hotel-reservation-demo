@@ -9,7 +9,7 @@ def check_date_validity(checkin_date: datetime, checkout_date: datetime) -> None
 
 
 def calculate_total_charge(
-    daily_rate: int, checkin_date: datetime, checkout_date: datetime
+    daily_rate: int, cleaning_fee: int, checkin_date: datetime, checkout_date: datetime
 ) -> int:
     calculated_days = (checkout_date - checkin_date).days
-    return daily_rate * calculated_days
+    return daily_rate * calculated_days + cleaning_fee

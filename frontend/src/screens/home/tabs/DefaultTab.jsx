@@ -12,6 +12,11 @@ const DefaultTab = ({
 }) => {
   const { cancelReservation } = actions;
   const loading = useSelector((state) => state?.site?.home?.loading);
+  const rooms = useSelector((state) => state?.site?.home?.rooms || []);
+  const roomMap = React.useMemo(
+    () => new Map(rooms.map((r) => [r.id, r])),
+    [rooms],
+  );
 
   return (
     <div data-name="reservations-tab">
@@ -32,8 +37,8 @@ const DefaultTab = ({
               <thead>
                 <tr>
                   <th scope="col">Room Identifier</th>
-                  <th scope="col">Stay Start Date</th>
-                  <th scope="col">Stay End Date</th>
+                  <th scope="col">Check-In</th>
+                  <th scope="col">Check-Out</th>
                   <th scope="col">Total Charge</th>
                   <th></th>
                   <th></th>
@@ -43,7 +48,11 @@ const DefaultTab = ({
               <tbody>
                 {reservations.map((reservation) => (
                   <tr key={reservation?.id}>
-                    <td>{reservation?.room_id}</td>
+                    <td>
+                      {roomMap.get(reservation?.room_id)?.room_number
+                        ? `Room ${roomMap.get(reservation?.room_id).room_number}`
+                        : `Room …${reservation?.room_id?.slice(-8)}`}
+                    </td>
                     <td>{utils.formatStayDate(reservation?.checkin_date)}</td>
                     <td>{utils.formatStayDate(reservation?.checkout_date)}</td>
                     <td>

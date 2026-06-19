@@ -31,7 +31,7 @@ const NewReservationComponent = ({
     });
   };
 
-  const roomIds = useSelector((state) => state?.site?.newReservations?.roomIds);
+  const rooms = useSelector((state) => state?.site?.newReservations?.rooms || []);
   const alert = {
     message: useSelector((state) => state?.shared?.alertMessage),
     type: useSelector((state) => state?.shared?.alertType),
@@ -62,10 +62,10 @@ const NewReservationComponent = ({
                       onChange={handleInputChange}
                       required
                     >
-                      <option value="">Select a Room ID</option>
-                      {roomIds.map((roomId) => (
-                        <option key={roomId} value={roomId}>
-                          {roomId}
+                      <option value="">Select a Room</option>
+                      {rooms.map((room) => (
+                        <option key={room.id} value={room.id}>
+                          Room {room.room_number}
                         </option>
                       ))}
                     </select>

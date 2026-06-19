@@ -8,6 +8,7 @@ from api import utils
 
 class Room(BaseModel):
     id: str
+    room_number: int
     num_beds: int
     allow_smoking: bool
     daily_rate: int

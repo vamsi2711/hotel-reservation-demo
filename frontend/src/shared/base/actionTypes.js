@@ -119,4 +119,8 @@ export const actionTypes = {
 
   SHOW_RESERVATION_COMPONENT: 'site/reservations/show/RESERVATION',
   GET_RESERVATION: 'site/reservations/show/GET_RESERVATION',
+
+  // Site Components - Dashboard Actions
+  DASHBOARD_COMPONENT: 'site/dashboard/DASHBOARD_COMPONENT',
+  GET_DASHBOARD_DATA: 'site/dashboard/GET_DASHBOARD_DATA',
 };

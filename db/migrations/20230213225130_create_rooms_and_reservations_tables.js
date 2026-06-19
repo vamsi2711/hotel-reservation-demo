@@ -2,6 +2,7 @@ export const up = async (knex) => {
   return knex.schema
     .createTable("rooms", (table) => {
       table.string("id").primary().unique();
+      table.integer("room_number").unique();
       table.integer("num_beds");
       table.boolean("allow_smoking");
       table.integer("daily_rate");

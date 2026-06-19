@@ -14,6 +14,7 @@ from api.models import ApiData
 from api.resolvers.mutations import (
     create_reservation_resolver,
     delete_reservation_resolver,
+    update_reservation_resolver,
 )
 from api.resolvers.queries import (
     get_all_reservations_resolver,
@@ -31,6 +32,7 @@ query.set_field("getAvailableRooms", get_available_rooms_resolver)
 mutation = ObjectType("Mutation")
 mutation.set_field("createReservation", create_reservation_resolver)
 mutation.set_field("deleteReservation", delete_reservation_resolver)
+mutation.set_field("updateReservation", update_reservation_resolver)
 
 type_defs = load_schema_from_path("schema.graphql")
 schema = make_executable_schema(

@@ -5,6 +5,7 @@ schema {
 
 type Room {
   id: String!
+  room_number: Int
   num_beds: Int
   allow_smoking: Boolean
   daily_rate: Int
@@ -25,6 +26,12 @@ input AvailableRoomInput {
 }
 
 input ReservationInput {
+  room_id: String!
+  checkin_date: String!
+  checkout_date: String!
+}
+
+input UpdateReservationInput {
   room_id: String!
   checkin_date: String!
   checkout_date: String!
@@ -58,4 +65,5 @@ type Query {
 type Mutation {
   createReservation(input: ReservationInput!): ReservationsResult!
   deleteReservation(reservationId: Int!): ReservationsResult!
+  updateReservation(reservationId: Int!, input: UpdateReservationInput!): ReservationResult!
 }

@@ -9,19 +9,21 @@ from api.resolvers.data import fetch_all_rows, fetch_available_rooms, fetch_rese
 async def get_reservation_resolver(obj, info, id) -> Dict[str, Any]:
     db = await DbSession()
     try:
-        result = await fetch_reservation(db, id)
-        return result
+        result = await fetch_reservation(db, int(id))
+        reservation_list = result.get("reservation", [])
+        return {
+            "success": True,
+            "errors": None,
+            "reservation": reservation_list[0] if reservation_list else None,
+        }
     except ValueError as error:
         message = f"Error retrieving reservation: {str(error)}"
         utils.log_api_message(__name__, message)
-        return {
-            "success": False,
-            "errors": [message],
-        }
+        return {"success": False, "errors": [message], "reservation": None}
     except Exception as e:
         error = f"Unexpected error: {str(e)}"
         utils.log_api_message(__name__, f"Unexpected error: {error}")
-        return {"success": False, "errors": [error]}
+        return {"success": False, "errors": [error], "reservation": None}
     finally:
         await db.close()
 

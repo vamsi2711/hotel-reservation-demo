@@ -1,32 +1,27 @@
-import { call, takeLatest, put } from 'redux-saga/effects';
+import { call, takeLatest, put, all } from 'redux-saga/effects';
 
 import { actionTypes, onFailure, onSuccessful } from '@/shared/base';
-import { fetchQuery, getExistingReservationsQuery } from '@/shared/graphql';
+import { fetchQuery, getExistingReservationsQuery, getAllRoomsQuery } from '@/shared/graphql';
 
 export function* getAllReservations() {
   try {
-    const variables = {};
-    const response = yield call(
-      fetchQuery,
-      getExistingReservationsQuery,
-      variables,
-    );
+    const [reservationsResponse, roomsResponse] = yield all([
+      call(fetchQuery, getExistingReservationsQuery, {}),
+      call(fetchQuery, getAllRoomsQuery, {}),
+    ]);
 
-    const data = response?.data;
-    const errors = data?.getAllReservations?.errors;
+    const errors =
+      reservationsResponse?.data?.getAllReservations?.errors ||
+      roomsResponse?.data?.getAllRooms?.errors;
     if (errors)
-      throw new Error(
-        `getallreservations-saga-error:  ${JSON.stringify(errors)}`,
-      );
-    else {
-      const { reservations } = data?.getAllReservations || [];
-      yield put({
-        type: onSuccessful(actionTypes.GET_RESERVATIONS),
-        response: {
-          data: reservations,
-        },
-      });
-    }
+      throw new Error(`getallreservations-saga-error: ${JSON.stringify(errors)}`);
+
+    const { reservations } = reservationsResponse?.data?.getAllReservations || {};
+    const { rooms } = roomsResponse?.data?.getAllRooms || {};
+    yield put({
+      type: onSuccessful(actionTypes.GET_RESERVATIONS),
+      response: { reservations, rooms },
+    });
   } catch (ex) {
     const message = `Could not retrieve reservations.  ${ex}`;
     yield put({
@@ -34,11 +29,7 @@ export function* getAllReservations() {
       alertType: 'danger',
       message,
     });
-    yield put({
-      type: actionTypes.SET_ALERT,
-      alertType: 'danger',
-      message,
-    });
+    yield put({ type: actionTypes.SET_ALERT, alertType: 'danger', message });
   }
 }
 
