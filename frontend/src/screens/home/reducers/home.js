@@ -27,6 +27,14 @@ const actionHandlers = {
     reservations: action?.response?.data || [],
     loading: false,
   }),
+  [onSuccessful(actionTypes.UPDATE_RESERVATION)]: (state, action) => ({
+    ...state,
+    reservations: state.reservations.map((r) =>
+      String(r.id) === String(action?.response?.data?.id)
+        ? action.response.data
+        : r,
+    ),
+  }),
 };
 
 const reducer = createComponentReducer(

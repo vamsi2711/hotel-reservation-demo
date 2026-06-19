@@ -73,7 +73,7 @@ describe('newReservation Saga', () => {
       },
     };
     const alertType = 'danger';
-    const expectedErrMessage = `Could not create reservation.  Error: createreservation-saga-error:  "${errMessage}"`;
+    const expectedErrMessage = errMessage;
 
     return scenario
       .provide([
@@ -98,7 +98,7 @@ describe('newReservation Saga', () => {
   it('should handle unexpected non-API errors', () => {
     const errMessage = new Error('Some error message');
     const alertType = 'danger';
-    const expectedErrMessage = `Could not create reservation.  ${errMessage}`;
+    const expectedErrMessage = errMessage.message;
 
     return scenario
       .provide([

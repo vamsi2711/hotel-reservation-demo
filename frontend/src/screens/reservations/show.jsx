@@ -76,8 +76,14 @@ const ShowReservationComponent = () => {
             Reservation #{reservation.id}
           </h5>
           {isPast ? (
-            <span className="badge bg-secondary fw-normal px-3 py-2" style={{ fontSize: '0.78rem' }}>
-              Past reservation
+            <span title="Stay already completed" style={{ cursor: 'not-allowed', display: 'inline-block' }}>
+              <button
+                className="btn btn-sm btn-warning fw-semibold"
+                disabled
+                style={{ pointerEvents: 'none', opacity: 0.45 }}
+              >
+                Edit
+              </button>
             </span>
           ) : (
             <Link

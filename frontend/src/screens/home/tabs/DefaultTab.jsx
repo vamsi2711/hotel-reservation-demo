@@ -6,6 +6,8 @@ import { useSelector } from 'react-redux';
 import { default as utils } from '@/shared/utils';
 import { Loading } from '@/shared/components';
 
+const TODAY = new Date().toISOString().slice(0, 10);
+
 const DefaultTab = ({
   reservations = [],
   actions = { cancelReservation: () => {} },
@@ -46,41 +48,62 @@ const DefaultTab = ({
                 </tr>
               </thead>
               <tbody>
-                {reservations.map((reservation) => (
-                  <tr key={reservation?.id}>
-                    <td>
-                      {roomMap.get(reservation?.room_id)?.room_number
-                        ? `Room ${roomMap.get(reservation?.room_id).room_number}`
-                        : `Room …${reservation?.room_id?.slice(-8)}`}
-                    </td>
-                    <td>{utils.formatStayDate(reservation?.checkin_date)}</td>
-                    <td>{utils.formatStayDate(reservation?.checkout_date)}</td>
-                    <td>
-                      {utils.formatNumberAsMoney(reservation?.total_charge)}
-                    </td>
-                    <td>
-                      <Link to={`/reservations/${reservation.id}`}>
-                        <Button variant="primary">View</Button>
-                      </Link>
-                    </td>
-                    <td>
-                      <Link to={`/reservations/${reservation.id}/edit`}>
-                        <Button variant="info">Edit</Button>
-                      </Link>
-                    </td>
-                    <td>
-                      <Button
-                        onClick={() =>
-                          cancelReservation &&
-                          cancelReservation(Number(reservation.id))
-                        }
-                        variant="danger"
-                      >
-                        Cancel
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                {reservations.map((reservation) => {
+                  const isPast =
+                    (reservation?.checkout_date?.slice(0, 10) || '') < TODAY;
+                  const completedTooltip = 'Stay already completed';
+                  return (
+                    <tr key={reservation?.id}>
+                      <td>
+                        {roomMap.get(reservation?.room_id)?.room_number
+                          ? `Room ${roomMap.get(reservation?.room_id).room_number}`
+                          : `Room …${reservation?.room_id?.slice(-8)}`}
+                      </td>
+                      <td>{utils.formatStayDate(reservation?.checkin_date)}</td>
+                      <td>{utils.formatStayDate(reservation?.checkout_date)}</td>
+                      <td>
+                        {utils.formatNumberAsMoney(reservation?.total_charge)}
+                      </td>
+                      <td>
+                        <Link to={`/reservations/${reservation.id}`}>
+                          <Button variant="primary">View</Button>
+                        </Link>
+                      </td>
+                      <td>
+                        {isPast ? (
+                          <span title={completedTooltip} style={{ cursor: 'not-allowed', display: 'inline-block' }}>
+                            <Button variant="info" disabled style={{ pointerEvents: 'none', opacity: 0.45 }}>
+                              Edit
+                            </Button>
+                          </span>
+                        ) : (
+                          <Link to={`/reservations/${reservation.id}/edit`}>
+                            <Button variant="info">Edit</Button>
+                          </Link>
+                        )}
+                      </td>
+                      <td>
+                        {isPast ? (
+                          <span title={completedTooltip} style={{ cursor: 'not-allowed', display: 'inline-block' }}>
+                            <Button variant="danger" disabled style={{ pointerEvents: 'none', opacity: 0.45 }}>
+                              Cancel
+                            </Button>
+                          </span>
+                        ) : (
+                          <Button
+                            onClick={() =>
+                              cancelReservation &&
+                              cancelReservation(Number(reservation.id))
+                            }
+                            variant="danger"
+                          >
+                            Cancel
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

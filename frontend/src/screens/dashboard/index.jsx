@@ -17,6 +17,21 @@ import { Loading } from '@/shared/components';
 const CHART_COLOR = '#4e8ccd';
 const CHART_COLOR_HOVER = '#2a5f9e';
 
+const TODAY = new Date().toISOString().slice(0, 10);
+
+export const isActiveOn = (r, date) => {
+  const checkin = r.checkin_date.slice(0, 10);
+  const checkout = r.checkout_date.slice(0, 10);
+  return checkin <= date && checkout >= date;
+};
+
+const formatDateLabel = (date) =>
+  new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
 const StatCard = ({ label, value, sub, accent }) => (
   <div className="col-md-3 mb-3">
     <div
@@ -59,13 +74,6 @@ const formatRoomLabel = (id, roomMap) => {
   return num ? `Room ${num}` : (id ? `…${id.slice(-8)}` : '—');
 };
 
-const DEMO_TODAY = '2026-06-18';
-const getStatus = (r) => {
-  const checkin = r.checkin_date.slice(0, 10);
-  const checkout = r.checkout_date.slice(0, 10);
-  return checkin <= DEMO_TODAY && checkout >= DEMO_TODAY ? 'active' : 'completed';
-};
-
 const DashboardComponent = () => {
   const reservations = useSelector(
     (state) => state?.site?.dashboard?.reservations || [],
@@ -73,6 +81,7 @@ const DashboardComponent = () => {
   const rooms = useSelector((state) => state?.site?.dashboard?.rooms || []);
   const loading = useSelector((state) => state?.site?.dashboard?.loading);
 
+  const [occupancyDate, setOccupancyDate] = useState(TODAY);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [roomSearch, setRoomSearch] = useState('');
@@ -83,20 +92,40 @@ const DashboardComponent = () => {
   const totalRooms = rooms.length;
   const roomMap = useMemo(() => new Map(rooms.map((r) => [r.id, r])), [rooms]);
 
-  const reservedRoomIds = useMemo(
-    () => new Set(reservations.map((r) => r.room_id)),
-    [reservations],
+  const occupiedRoomIds = useMemo(
+    () => new Set(
+      reservations
+        .filter((r) => isActiveOn(r, occupancyDate))
+        .map((r) => r.room_id),
+    ),
+    [reservations, occupancyDate],
   );
-  const availableRooms = totalRooms - reservedRoomIds.size;
+
+  const availableRooms = totalRooms - occupiedRoomIds.size;
   const utilizationRate =
     totalRooms > 0
-      ? Math.round((reservedRoomIds.size / totalRooms) * 100)
+      ? Math.round((occupiedRoomIds.size / totalRooms) * 100)
       : 0;
+
+  const isToday = occupancyDate === TODAY;
+  const dateLabel = isToday ? 'Today' : formatDateLabel(occupancyDate);
+  const availableLabel = isToday ? 'Available Today' : `Available on ${dateLabel}`;
+  const occupancyLabel = isToday ? "Today's Occupancy" : `Occupancy on ${dateLabel}`;
 
   const totalRevenue = useMemo(
     () => reservations.reduce((sum, r) => sum + (r.total_charge || 0), 0),
     [reservations],
   );
+
+  const occupancyRevenue = useMemo(
+    () =>
+      reservations
+        .filter((r) => isActiveOn(r, occupancyDate))
+        .reduce((sum, r) => sum + (r.total_charge || 0), 0),
+    [reservations, occupancyDate],
+  );
+
+  const revenueLabel = isToday ? 'revenue today' : `revenue on ${dateLabel}`;
 
   const chartData = useMemo(() => {
     const byMonth = {};
@@ -125,10 +154,13 @@ const DashboardComponent = () => {
         const label = formatRoomLabel(r.room_id, roomMap).toLowerCase();
         if (!label.includes(roomSearch.toLowerCase())) return false;
       }
-      if (statusFilter && getStatus(r) !== statusFilter) return false;
+      if (statusFilter) {
+        const status = isActiveOn(r, occupancyDate) ? 'active' : 'completed';
+        if (status !== statusFilter) return false;
+      }
       return true;
     });
-  }, [reservations, dateFrom, dateTo, roomSearch, statusFilter]);
+  }, [reservations, dateFrom, dateTo, roomSearch, statusFilter, occupancyDate]);
 
   const clearFilters = () => {
     setDateFrom('');
@@ -150,13 +182,43 @@ const DashboardComponent = () => {
   return (
     <div style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
     <div className="container-fluid px-4 py-4" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <div className="mb-4">
-        <h2 className="fw-bold mb-0" style={{ color: '#1a2e4a' }}>
-          Reservation Analytics Dashboard
-        </h2>
-        <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>
-          Facility utilization and booking trends &mdash; ACME Research Lodging
-        </p>
+
+      {/* Header + Occupancy Date Picker */}
+      <div className="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+          <h2 className="fw-bold mb-0" style={{ color: '#1a2e4a' }}>
+            Reservation Analytics Dashboard
+          </h2>
+          <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>
+            Facility utilization and booking trends &mdash; ACME Research Lodging
+          </p>
+        </div>
+        <div className="d-flex align-items-center gap-2 pt-1">
+          <label
+            htmlFor="occupancy-date"
+            className="fw-semibold text-nowrap mb-0"
+            style={{ fontSize: '0.85rem', color: '#495057' }}
+          >
+            Occupancy date
+          </label>
+          <input
+            id="occupancy-date"
+            type="date"
+            className="form-control form-control-sm"
+            style={{ width: 'auto' }}
+            value={occupancyDate}
+            onChange={(e) => setOccupancyDate(e.target.value || TODAY)}
+          />
+          {!isToday && (
+            <button
+              className="btn btn-sm btn-outline-secondary text-nowrap"
+              onClick={() => setOccupancyDate(TODAY)}
+              style={{ fontSize: '0.78rem' }}
+            >
+              Back to today
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Stats Row */}
@@ -174,15 +236,15 @@ const DashboardComponent = () => {
           accent="#28a745"
         />
         <StatCard
-          label="Available Rooms"
+          label={availableLabel}
           value={availableRooms}
-          sub={`${reservedRoomIds.size} room${reservedRoomIds.size !== 1 ? 's' : ''} reserved`}
+          sub={`${occupiedRoomIds.size} room${occupiedRoomIds.size !== 1 ? 's' : ''} occupied`}
           accent="#fd7e14"
         />
         <StatCard
-          label="Utilization Rate"
+          label={occupancyLabel}
           value={`${utilizationRate}%`}
-          sub={`$${totalRevenue.toLocaleString()} total revenue`}
+          sub={`$${occupancyRevenue.toLocaleString()} ${revenueLabel}`}
           accent="#6f42c1"
         />
       </div>
@@ -322,69 +384,27 @@ const DashboardComponent = () => {
               <table className="table table-sm table-hover align-middle mb-0">
                 <thead>
                   <tr style={{ borderBottom: '2px solid #dee2e6' }}>
-                    <th
-                      scope="col"
-                      style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}
-                    >
-                      ID
-                    </th>
-                    <th
-                      scope="col"
-                      style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}
-                    >
-                      Room
-                    </th>
-                    <th
-                      scope="col"
-                      style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}
-                    >
-                      Check-In
-                    </th>
-                    <th
-                      scope="col"
-                      style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}
-                    >
-                      Check-Out
-                    </th>
-                    <th
-                      scope="col"
-                      style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}
-                    >
-                      Nights
-                    </th>
-                    <th
-                      scope="col"
-                      style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}
-                    >
-                      Total Charge
-                    </th>
-                    <th
-                      scope="col"
-                      style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}
-                    >
-                      Status
-                    </th>
+                    <th scope="col" style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}>ID</th>
+                    <th scope="col" style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}>Room</th>
+                    <th scope="col" style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}>Check-In</th>
+                    <th scope="col" style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}>Check-Out</th>
+                    <th scope="col" style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}>Nights</th>
+                    <th scope="col" style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}>Total Charge</th>
+                    <th scope="col" style={{ fontSize: '0.8rem', color: '#6c757d', fontWeight: 600 }}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredReservations.map((r) => {
                     const checkin = new Date(r.checkin_date.slice(0, 10) + 'T00:00:00');
                     const checkout = new Date(r.checkout_date.slice(0, 10) + 'T00:00:00');
-                    const nights = Math.round(
-                      (checkout - checkin) / (1000 * 60 * 60 * 24),
-                    );
-                    const isActive = getStatus(r) === 'active';
+                    const nights = Math.round((checkout - checkin) / (1000 * 60 * 60 * 24));
+                    const active = isActiveOn(r, occupancyDate);
                     return (
                       <tr key={r.id}>
-                        <td
-                          className="font-monospace"
-                          style={{ fontSize: '0.8rem', color: '#495057' }}
-                        >
+                        <td className="font-monospace" style={{ fontSize: '0.8rem', color: '#495057' }}>
                           #{r.id}
                         </td>
-                        <td style={{ fontSize: '0.85rem' }}>
-                          {formatRoomLabel(r.room_id, roomMap)}
-                        </td>
+                        <td style={{ fontSize: '0.85rem' }}>{formatRoomLabel(r.room_id, roomMap)}</td>
                         <td style={{ fontSize: '0.85rem' }}>{r.checkin_date.slice(0, 10)}</td>
                         <td style={{ fontSize: '0.85rem' }}>{r.checkout_date.slice(0, 10)}</td>
                         <td style={{ fontSize: '0.85rem' }}>{nights}</td>
@@ -393,10 +413,10 @@ const DashboardComponent = () => {
                         </td>
                         <td>
                           <span
-                            className={`badge ${isActive ? 'bg-success' : 'bg-secondary'}`}
+                            className={`badge ${active ? 'bg-success' : 'bg-secondary'}`}
                             style={{ fontSize: '0.7rem' }}
                           >
-                            {isActive ? 'Active' : 'Completed'}
+                            {active ? 'Active' : 'Completed'}
                           </span>
                         </td>
                       </tr>

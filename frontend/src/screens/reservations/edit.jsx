@@ -6,7 +6,7 @@ import { actionTypes } from '@/shared/base';
 import { Loading } from '@/shared/components';
 import utils from '@/shared/utils';
 
-const formatRoomLabel = (id) => (id ? `Room …${id.slice(-8)}` : id);
+const TODAY = new Date().toISOString().slice(0, 10);
 
 const EditReservationComponent = () => {
   const { id } = useParams();
@@ -16,6 +16,7 @@ const EditReservationComponent = () => {
   const reservation = useSelector((state) => state?.site?.editReservations?.reservation);
   const rooms = useSelector((state) => state?.site?.editReservations?.rooms || []);
   const loading = useSelector((state) => state?.site?.editReservations?.loading);
+  const updateSuccess = useSelector((state) => state?.site?.editReservations?.updateSuccess);
 
   const [formData, setFormData] = useState(null);
 
@@ -27,7 +28,7 @@ const EditReservationComponent = () => {
   useEffect(() => {
     if (reservation && !formData) {
       const checkoutDate = utils.formatStayDate(reservation.checkout_date);
-      if (checkoutDate < new Date().toISOString().slice(0, 10)) {
+      if (checkoutDate < TODAY) {
         navigate(`/reservations/${id}`);
         return;
       }
@@ -38,6 +39,12 @@ const EditReservationComponent = () => {
       });
     }
   }, [reservation]);
+
+  useEffect(() => {
+    if (updateSuccess) {
+      navigate(`/reservations/${id}`);
+    }
+  }, [updateSuccess]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,8 +58,12 @@ const EditReservationComponent = () => {
       reservationId: parseInt(id),
       ...formData,
     });
-    navigate(`/reservations/${id}`);
   };
+
+  const isOngoing =
+    formData &&
+    formData.checkin_date < TODAY &&
+    formData.checkout_date >= TODAY;
 
   if (loading || !formData) {
     return (
@@ -85,12 +96,14 @@ const EditReservationComponent = () => {
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
               <label
+                htmlFor="edit-room"
                 className="form-label fw-semibold text-uppercase"
                 style={{ fontSize: '0.75rem', letterSpacing: '0.06em', color: '#6c757d' }}
               >
                 Room
               </label>
               <select
+                id="edit-room"
                 name="room_id"
                 className="form-select"
                 value={formData.room_id}
@@ -107,29 +120,39 @@ const EditReservationComponent = () => {
 
             <div className="mb-3">
               <label
+                htmlFor="edit-checkin"
                 className="form-label fw-semibold text-uppercase"
                 style={{ fontSize: '0.75rem', letterSpacing: '0.06em', color: '#6c757d' }}
               >
                 Check-in Date
               </label>
               <input
+                id="edit-checkin"
                 type="date"
                 name="checkin_date"
                 className="form-control"
                 value={formData.checkin_date}
                 onChange={handleChange}
+                disabled={isOngoing}
                 required
               />
+              {isOngoing && (
+                <div className="form-text text-muted">
+                  Check-in date cannot be changed for a reservation already in progress.
+                </div>
+              )}
             </div>
 
             <div className="mb-3">
               <label
+                htmlFor="edit-checkout"
                 className="form-label fw-semibold text-uppercase"
                 style={{ fontSize: '0.75rem', letterSpacing: '0.06em', color: '#6c757d' }}
               >
                 Check-out Date
               </label>
               <input
+                id="edit-checkout"
                 type="date"
                 name="checkout_date"
                 className="form-control"

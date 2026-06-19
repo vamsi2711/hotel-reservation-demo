@@ -96,7 +96,7 @@ class DescribeCreateReservationsResolver:
 
         assert result["success"] is False
         assert "errors" in result
-        assert "Dates overlap with an existing reservations." in result["errors"]
+        assert "Dates overlap with an existing reservation." in result["errors"]
 
     @pytest.mark.asyncio
     async def should_not_create_reservation_when_checkin_date_is_in_past(self, mocker):

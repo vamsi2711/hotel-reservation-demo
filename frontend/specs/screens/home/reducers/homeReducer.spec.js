@@ -31,4 +31,31 @@ describe('home/reducers/homeReducer tests', () => {
 
     expect(state).toEqual(expectedState);
   });
+
+  it('should patch the updated reservation in the list on UPDATE_RESERVATION_SUCCESS', () => {
+    const original = {
+      id: '1',
+      room_id: 'room-a',
+      checkin_date: '2026-06-01',
+      checkout_date: '2026-06-10',
+      total_charge: 500,
+    };
+    const updated = { ...original, checkout_date: '2026-06-15', total_charge: 700 };
+
+    const initialState = {
+      loading: false,
+      reservations: [original, { id: '2', room_id: 'room-b', total_charge: 200 }],
+      rooms: [],
+    };
+
+    const action = {
+      type: onSuccessful(actionTypes.UPDATE_RESERVATION),
+      response: { data: updated },
+    };
+
+    const state = homeReducer(initialState, action);
+
+    expect(state.reservations[0]).toEqual(updated);
+    expect(state.reservations[1]).toEqual(initialState.reservations[1]);
+  });
 });

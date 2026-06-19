@@ -11,9 +11,7 @@ export function* newReservation({ room_id, checkin_date, checkout_date }) {
     const data = response?.data;
     const errors = data?.createReservation?.errors;
     if (errors)
-      throw new Error(
-        `createreservation-saga-error:  ${JSON.stringify(errors)}`,
-      );
+      throw new Error(Array.isArray(errors) ? errors[0] : errors);
     else {
       const { reservations } = data?.createReservation || [];
       yield put({
@@ -29,7 +27,7 @@ export function* newReservation({ room_id, checkin_date, checkout_date }) {
       });
     }
   } catch (ex) {
-    const message = `Could not create reservation.  ${ex}`;
+    const message = ex.message || 'Could not create reservation.';
     yield put({
       type: onFailure(actionTypes.CREATE_RESERVATION),
       alertType: 'danger',

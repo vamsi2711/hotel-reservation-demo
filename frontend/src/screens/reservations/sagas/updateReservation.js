@@ -13,7 +13,7 @@ export function* updateReservation({ reservationId, room_id, checkin_date, check
     const errors = data?.updateReservation?.errors;
 
     if (errors?.length) {
-      throw new Error(`updatereservation-saga-error: ${JSON.stringify(errors)}`);
+      throw new Error(Array.isArray(errors) ? errors[0] : errors);
     }
 
     const reservation = data?.updateReservation?.reservation;
@@ -26,8 +26,9 @@ export function* updateReservation({ reservationId, room_id, checkin_date, check
       alertType: 'success',
       message: 'Reservation updated.',
     });
+    yield put({ type: actionTypes.GET_RESERVATIONS });
   } catch (ex) {
-    const message = `Could not update reservation. ${ex}`;
+    const message = ex.message || 'Could not update reservation.';
     yield put({
       type: onFailure(actionTypes.UPDATE_RESERVATION),
       alertType: 'danger',
