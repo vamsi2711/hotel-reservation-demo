@@ -1,7 +1,7 @@
 ariadne==1.1.0
 asyncpg==0.31.0
 black==26.5.1
-fastapi==0.137.1
+fastapi==0.137.2
 flake8==7.3.0
 httpx==0.28.1
 isort==8.0.1
