@@ -13,6 +13,38 @@ React [Typescript](https://github.com/WillSams/example-ts-react-with-python) and
 
 An [abandoned](https://github.com/WillSams/example-mvc-expressjs-with-python/tree/abandoned) branch for the previous version of this repository includes the usage of TortoiseORM.
 
+## Running with Docker Compose
+
+The entire stack (database, backend, frontend) can be started with a single command.
+
+**Prerequisites:** Docker and Docker Compose installed. No Node.js or Python required on the host.
+
+```bash
+# 1. Load environment variables (provides PG_USER, SECRET_KEY, FRONTEND_PORT, etc.)
+source env.sh
+
+# 2. Build images and start all services
+docker-compose up --build
+```
+
+Once running:
+- **Frontend:** http://localhost:3000
+- **Backend API:** http://localhost:8080/development/graphql
+
+On the very first start, `db-migrate` automatically runs Knex migrations and seeds the database with rooms and sample reservations. On subsequent starts it re-runs migrations (idempotent) and skips seeds that are already present.
+
+To stop and remove containers (data volume is preserved):
+```bash
+docker-compose down
+```
+
+To also wipe the database volume and start completely fresh:
+```bash
+docker-compose down -v
+```
+
+---
+
 **Context**:
 
 - When a room is reserved, it cannot be reserved by another guest on overlapping dates.

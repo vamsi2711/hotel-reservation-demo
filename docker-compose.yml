@@ -1,5 +1,7 @@
 version: "3.8"
 services:
+
+  # ── Database ──────────────────────────────────────────────────────────────
   hotel-db:
     image: postgres:14.2-alpine
     container_name: hotel-db
@@ -12,7 +14,84 @@ services:
     volumes:
       - hotel-db-data:/var/lib/postgresql/data
     command: ["postgres", "-c", "listen_addresses=*"]
+    networks:
+      - hotel-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Migrations + Seeds ────────────────────────────────────────────────────
+  # Runs on every `docker-compose up`. migrate:latest is idempotent (knex
+  # tracks applied migrations). seed:run is attempted and failures are
+  # ignored gracefully — on a fresh DB it populates rooms/reservations; on
+  # subsequent starts the unique constraints reject duplicates and we skip.
+  db-migrate:
+    image: node:20-alpine
+    working_dir: /db
+    volumes:
+      - ./db:/db
+    environment:
+      - PG_HOST=hotel-db
+      - PG_PORT=5432
+      - PG_USER=${PG_USER}
+      - PG_PASSWD=${PG_PASSWD}
+    command: >
+      sh -c "npm ci --prefer-offline &&
+             npx knex migrate:latest &&
+             (npx knex seed:run || echo 'Seeds already applied, skipping.')"
+    depends_on:
+      hotel-db:
+        condition: service_healthy
+    networks:
+      - hotel-network
+
+  # ── Backend (FastAPI + GraphQL) ───────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      args:
+        RESERVATION_PORT: 8080
+    container_name: hotel-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - RESERVATION_PORT=8080
+      - ENV=development
+      - PG_URL=postgres://${PG_USER}:${PG_PASSWD}@hotel-db:5432/hotel_development
+      - IS_DEBUG=0
+      - SECRET_KEY=${SECRET_KEY}
+      - REFRESH_SECRET_KEY=${REFRESH_SECRET_KEY}
+      - ALLOWED_ORIGINS=http://localhost:${FRONTEND_PORT:-3000}
+    depends_on:
+      db-migrate:
+        condition: service_completed_successfully
+    networks:
+      - hotel-network
+
+  # ── Frontend (Vite build → nginx) ─────────────────────────────────────────
+  # RESERVATION_API is baked into the JS bundle at build time; it must be the
+  # URL the *browser* (on the host) uses to reach the backend — not the Docker
+  # service name — so we use localhost with the mapped port.
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        FRONTEND_PORT: 80
+        NODE_ENV: development
+        RESERVATION_API: http://localhost:8080/development
+    container_name: hotel-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    networks:
+      - hotel-network
+
 volumes:
   hotel-db-data:
+
 networks:
   hotel-network:
+    driver: bridge
