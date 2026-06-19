@@ -8,13 +8,14 @@ describe('reservations/reducers/newReducer tests', () => {
   });
 
   it('should handle site/reservations/GET_ROOM_IDS_SUCCESS', () => {
-    const response = {
-      data: {
-        roomIds: ['room1', 'room2', 'room3'],
-      },
-    };
+    const rooms = [
+      { id: 'room1', room_number: 101 },
+      { id: 'room2', room_number: 102 },
+      { id: 'room3', room_number: 103 },
+    ];
 
-    const initialState = { loading: true, roomIds: [] };
+    const response = { data: rooms };
+    const initialState = { loading: true, rooms: [] };
 
     const action = {
       type: onSuccessful(actionTypes.GET_ROOM_IDS),
@@ -25,7 +26,7 @@ describe('reservations/reducers/newReducer tests', () => {
 
     const expectedState = {
       loading: false,
-      roomIds: response?.data || [],
+      rooms,
     };
 
     expect(state).toEqual(expectedState);

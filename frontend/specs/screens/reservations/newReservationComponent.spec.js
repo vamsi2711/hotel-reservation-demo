@@ -8,7 +8,7 @@ import NewReservationComponent from '@/screens/reservations/new';
 import { render } from '../../reactTestHelpers';
 
 describe('NewReservationComponent', () => {
-  it(`should render component with rooIds populated for selection`, async () => {
+  it(`should render component with rooms populated for selection`, async () => {
     const pathname = `/reservations/new`;
     const initialEntries = [pathname];
     const initialState = {
@@ -16,7 +16,11 @@ describe('NewReservationComponent', () => {
       router: { location: { pathname } },
       site: {
         newReservations: {
-          roomIds: ['room1', 'room2', 'room3'],
+          rooms: [
+            { id: 'room1', room_number: 101 },
+            { id: 'room2', room_number: 102 },
+            { id: 'room3', room_number: 103 },
+          ],
         },
       },
     };
@@ -25,9 +29,9 @@ describe('NewReservationComponent', () => {
     render(ui, { initialState, initialEntries });
 
     expect(screen.getByText(/Create a New Reservation/i)).toBeInTheDocument();
-    expect(screen.getByText(/room1/i)).toBeInTheDocument();
-    expect(screen.getByText(/room2/i)).toBeInTheDocument();
-    expect(screen.getByText(/room3/i)).toBeInTheDocument();
+    expect(screen.getByText(/Room 101/i)).toBeInTheDocument();
+    expect(screen.getByText(/Room 102/i)).toBeInTheDocument();
+    expect(screen.getByText(/Room 103/i)).toBeInTheDocument();
 
     const roomLabel = screen.getAllByText(/Room ID/i)[0];
     expect(roomLabel).toBeInTheDocument();

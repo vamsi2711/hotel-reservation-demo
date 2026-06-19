@@ -19,18 +19,22 @@ describe('HomeComponent', () => {
         reservations: [
           {
             id: '998',
-            room_id: 'Test Reservation 1',
+            room_id: 'room-id-1',
             checkin_date: '2021-01-01',
             checkout_date: '2021-01-02',
             total_charge: 100,
           },
           {
             id: '999',
-            room_id: 'Test Reservation 2',
+            room_id: 'room-id-2',
             checkin_date: '2021-01-01',
             checkout_date: '2021-01-02',
             total_charge: 100,
           },
+        ],
+        rooms: [
+          { id: 'room-id-1', room_number: 101 },
+          { id: 'room-id-2', room_number: 102 },
         ],
       },
     },
@@ -46,8 +50,8 @@ describe('HomeComponent', () => {
     );
     render(ui, { initialState, initialEntries });
 
-    expect(screen.getByText('Test Reservation 1')).toBeInTheDocument();
-    expect(screen.getByText('Test Reservation 2')).toBeInTheDocument();
+    expect(screen.getByText('Room 101')).toBeInTheDocument();
+    expect(screen.getByText('Room 102')).toBeInTheDocument();
 
     const cancelButtons = screen.getAllByRole('button', { name: /Cancel/i });
     expect(cancelButtons.length).toBe(2);

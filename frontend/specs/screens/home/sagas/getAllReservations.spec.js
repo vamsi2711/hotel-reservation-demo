@@ -3,7 +3,7 @@ import { call } from 'redux-saga/effects';
 import { throwError } from 'redux-saga-test-plan/providers';
 
 import { actionTypes, onFailure, onSuccessful } from '@/shared/base';
-import { fetchQuery, getExistingReservationsQuery } from '@/shared/graphql';
+import { fetchQuery, getExistingReservationsQuery, getAllRoomsQuery } from '@/shared/graphql';
 
 import getAllReservations from '@/screens/home/sagas/getAllReservations';
 
@@ -15,6 +15,19 @@ describe('getAllReservations Saga', () => {
   };
   const expectedRequestParams = {};
 
+  const mockRooms = [
+    { id: 'room1', room_number: 101 },
+    { id: 'room2', room_number: 102 },
+  ];
+  const mockRoomsResponse = {
+    data: {
+      getAllRooms: {
+        errors: null,
+        rooms: mockRooms,
+      },
+    },
+  };
+
   beforeEach(() => {
     scenario = expectSaga(getAllReservations).dispatch(action);
   });
@@ -23,14 +36,15 @@ describe('getAllReservations Saga', () => {
   });
 
   it('should handle successful API response', () => {
+    const mockReservations = [
+      { id: '1', Name: 'Test Reservation 1' },
+      { id: '2', Name: 'Test Reservation 2' },
+    ];
     const mockResponse = {
       data: {
         getAllReservations: {
           errors: null,
-          reservations: [
-            { id: '1', Name: 'Test Reservation 1' },
-            { id: '2', Name: 'Test Reservation 2' },
-          ],
+          reservations: mockReservations,
         },
       },
     };
@@ -41,11 +55,16 @@ describe('getAllReservations Saga', () => {
           call(fetchQuery, getExistingReservationsQuery, expectedRequestParams),
           mockResponse,
         ],
+        [
+          call(fetchQuery, getAllRoomsQuery, expectedRequestParams),
+          mockRoomsResponse,
+        ],
       ])
       .put({
         type: onSuccessful(action.type),
         response: {
-          data: mockResponse.data.getAllReservations.reservations,
+          reservations: mockReservations,
+          rooms: mockRooms,
         },
       })
       .silentRun();
@@ -62,13 +81,17 @@ describe('getAllReservations Saga', () => {
       },
     };
     const alertType = 'danger';
-    const expectedErrMessage = `Could not retrieve reservations.  Error: getallreservations-saga-error:  "${errMessage}"`;
+    const expectedErrMessage = `Could not retrieve reservations.  Error: getallreservations-saga-error: "${errMessage}"`;
 
     return scenario
       .provide([
         [
           call(fetchQuery, getExistingReservationsQuery, expectedRequestParams),
           mockResponse,
+        ],
+        [
+          call(fetchQuery, getAllRoomsQuery, expectedRequestParams),
+          mockRoomsResponse,
         ],
       ])
       .put({

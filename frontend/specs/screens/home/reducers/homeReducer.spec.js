@@ -7,16 +7,14 @@ describe('home/reducers/homeReducer tests', () => {
   });
 
   it('should handle site/home/GET_RESERVATIONS_SUCCESS', () => {
-    const response = {
-      data: {
-        reservations: [
-          { id: '1', Name: 'Test Reservation 1' },
-          { id: '2', Name: 'Test Reservation 2' },
-        ],
-      },
-    };
+    const reservations = [
+      { id: '1', Name: 'Test Reservation 1' },
+      { id: '2', Name: 'Test Reservation 2' },
+    ];
+    const rooms = [];
 
-    const initialState = { loading: true, reservations: [] };
+    const response = { reservations, rooms };
+    const initialState = { loading: true, reservations: [], rooms: [] };
 
     const action = {
       type: onSuccessful(actionTypes.GET_RESERVATIONS),
@@ -27,7 +25,8 @@ describe('home/reducers/homeReducer tests', () => {
 
     const expectedState = {
       loading: false,
-      reservations: response?.data || [],
+      reservations,
+      rooms,
     };
 
     expect(state).toEqual(expectedState);

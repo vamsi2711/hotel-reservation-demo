@@ -3,7 +3,7 @@ import { call } from 'redux-saga/effects';
 import { throwError } from 'redux-saga-test-plan/providers';
 
 import { actionTypes, onFailure, onSuccessful } from '@/shared/base';
-import { fetchQuery, getRoomIdsQuery } from '@/shared/graphql';
+import { fetchQuery, getAllRoomsQuery } from '@/shared/graphql';
 
 import getAllRoomIds from '@/screens/reservations/sagas/getAllRoomIds';
 
@@ -12,7 +12,11 @@ describe('getAllRoomIds Saga', () => {
 
   const action = { type: actionTypes.GET_ROOM_IDS };
   const expectedRequestParams = {};
-  const mockRooms = [{ id: 'room1' }, { id: 'room2' }, { id: 'room3' }];
+  const mockRooms = [
+    { id: 'room1', room_number: 101 },
+    { id: 'room2', room_number: 102 },
+    { id: 'room3', room_number: 103 },
+  ];
 
   beforeEach(() => {
     scenario = expectSaga(getAllRoomIds).dispatch(action);
@@ -33,14 +37,14 @@ describe('getAllRoomIds Saga', () => {
     return scenario
       .provide([
         [
-          call(fetchQuery, getRoomIdsQuery, expectedRequestParams),
+          call(fetchQuery, getAllRoomsQuery, expectedRequestParams),
           mockResponse,
         ],
       ])
       .put({
         type: onSuccessful(action.type),
         response: {
-          data: mockRooms.map((room) => room.id),
+          data: mockRooms,
         },
       })
       .silentRun();
@@ -57,12 +61,12 @@ describe('getAllRoomIds Saga', () => {
       },
     };
     const alertType = 'danger';
-    const expectedErrMessage = `Could not retrieve room identifiers:  Error: getallreservations-saga-error:  "${errMessage}"`;
+    const expectedErrMessage = `Could not retrieve rooms: Error: getallrooms-saga-error: "${errMessage}"`;
 
     return scenario
       .provide([
         [
-          call(fetchQuery, getRoomIdsQuery, expectedRequestParams),
+          call(fetchQuery, getAllRoomsQuery, expectedRequestParams),
           mockResponse,
         ],
       ])
@@ -83,12 +87,12 @@ describe('getAllRoomIds Saga', () => {
     const errMessage = new Error('Some error message');
     const alertType = 'danger';
     const expectedErrMessage =
-      'Could not retrieve room identifiers:  Error: Some error message';
+      'Could not retrieve rooms: Error: Some error message';
 
     return scenario
       .provide([
         [
-          call(fetchQuery, getRoomIdsQuery, expectedRequestParams),
+          call(fetchQuery, getAllRoomsQuery, expectedRequestParams),
           throwError(errMessage),
         ],
       ])

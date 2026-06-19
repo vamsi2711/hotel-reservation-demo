@@ -122,7 +122,7 @@ const NewReservationComponent = ({
 
 const screen = connectComponent(NewReservationComponent, {
   componentName: actionTypes.NEW_RESERVATION_COMPONENT,
-  state: (state) => state?.site?.newReservations?.roomIds,
+  state: (state) => state?.site?.newReservations || {},
   load: {
     roomIds: () => ({ type: actionTypes.GET_ROOM_IDS }),
   },
