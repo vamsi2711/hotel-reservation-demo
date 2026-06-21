@@ -24,9 +24,9 @@ services:
 
   # ── Migrations + Seeds ────────────────────────────────────────────────────
   # Runs on every `docker-compose up`. migrate:latest is idempotent (knex
-  # tracks applied migrations). seed:run is attempted and failures are
-  # ignored gracefully — on a fresh DB it populates rooms/reservations; on
-  # subsequent starts the unique constraints reject duplicates and we skip.
+  # tracks applied migrations). seed:run checks whether rooms already exist
+  # and is a no-op if they do — so data created after the first boot is
+  # never wiped by a container restart or rebuild.
   db-migrate:
     image: node:20-alpine
     working_dir: /db

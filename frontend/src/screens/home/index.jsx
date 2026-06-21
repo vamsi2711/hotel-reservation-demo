@@ -1,5 +1,5 @@
 import React from 'react';
-import { Col, Nav, Row, Tab } from 'react-bootstrap';
+import { Nav, Tab } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 
 import { actionTypes, connectComponent } from '@/shared/base';
@@ -9,6 +9,7 @@ import HomeTabs from './tabs';
 
 const HomeComponent = ({
   cancelReservation = () => {},
+  checkoutNow = () => {},
   handleCloseAlert = () => {},
   handleConfirmAction = () => {},
   handleRejectAction = () => {},
@@ -33,39 +34,34 @@ const HomeComponent = ({
   };
 
   const reservations = useSelector((state) => state?.site?.home?.reservations);
-  const tabActions = { cancelReservation };
+  const tabActions = { cancelReservation, checkoutNow };
 
   return (
     <div data-name="home-component" className="col-lg-12">
       <div className="jumbotron p-3 p-md-12 text-white rounded bg-dark">
         <Tab.Container defaultActiveKey="reservations">
-          <Row className="nav nav-tabs ml-4">
-            <Nav className="bg-dark">
-              <Col lg={6}>
-                <Nav.Item>
-                  <Nav.Link eventKey="reservations">Reservations</Nav.Link>
-                </Nav.Item>
-              </Col>
-              <Col lg={6}>
-                <Nav.Item>
-                  <Nav.Link eventKey="about">About</Nav.Link>
-                </Nav.Item>
-              </Col>
-            </Nav>
-          </Row>
-          <Row lg={12}>
-            <Tab.Content>
-              <Tab.Pane eventKey="reservations">
-                <HomeTabs.DefaultTab
-                  reservations={reservations}
-                  actions={tabActions}
-                />
-              </Tab.Pane>
-              <Tab.Pane eventKey="about">
-                <HomeTabs.AboutTab />
-              </Tab.Pane>
-            </Tab.Content>
-          </Row>
+          <Nav
+            className="home-tabs-nav"
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.15)' }}
+          >
+            <Nav.Item>
+              <Nav.Link eventKey="reservations">Reservations</Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link eventKey="about">About</Nav.Link>
+            </Nav.Item>
+          </Nav>
+          <Tab.Content>
+            <Tab.Pane eventKey="reservations">
+              <HomeTabs.DefaultTab
+                reservations={reservations}
+                actions={tabActions}
+              />
+            </Tab.Pane>
+            <Tab.Pane eventKey="about">
+              <HomeTabs.AboutTab />
+            </Tab.Pane>
+          </Tab.Content>
         </Tab.Container>
       </div>
       {alert.message && (
@@ -106,6 +102,8 @@ const screen = connectComponent(HomeComponent, {
         type: actionTypes.DELETE_RESERVATION,
         reservationId: parseInt(id),
       }),
+    checkoutNow: (reservationData) =>
+      dispatch({ type: actionTypes.CHECKOUT_NOW, ...reservationData }),
     editReservation: (id) =>
       dispatch({
         type: actionTypes.EDIT_RESERVATION_COMPONENT,

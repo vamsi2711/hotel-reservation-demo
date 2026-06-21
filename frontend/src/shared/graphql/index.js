@@ -10,5 +10,6 @@ export {
   getExistingReservationsQuery,
   getRoomIdsQuery,
   getAllRoomsQuery,
+  getAvailableRoomsQuery,
   getReservationQuery,
 } from './queries';

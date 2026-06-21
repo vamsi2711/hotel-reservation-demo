@@ -119,7 +119,7 @@ class DescribeCreateReservationsResolver:
 
         assert result["success"] is False
         assert "errors" in result
-        assert "Check-in date must be greater than today." in result["errors"]
+        assert "Check-in date cannot be in the past." in result["errors"]
 
     @pytest.mark.asyncio
     async def should_not_create_reservation_when_checkout_date_is_before_checkin_date(
@@ -144,4 +144,4 @@ class DescribeCreateReservationsResolver:
 
         assert result["success"] is False
         assert "errors" in result
-        assert "Check-out date must be greater than check-in date." in result["errors"]
+        assert "Check-out date cannot be before check-in date." in result["errors"]

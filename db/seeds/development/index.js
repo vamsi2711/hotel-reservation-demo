@@ -52,6 +52,15 @@ const injectTables = async (knex, tableName) => {
 };
 
 export const seed = async (knex) => {
+  // Skip seeding entirely if rooms already exist — preserves data created after initial setup.
+  const roomsExist = await knex.schema.hasTable('rooms');
+  if (roomsExist) {
+    const [{ count }] = await knex('rooms').count('id as count');
+    if (parseInt(count, 10) > 0) {
+      console.log('Database already has data — skipping seed to preserve existing records.');
+      return;
+    }
+  }
   await injectTables(knex, 'rooms');
   await injectTables(knex, 'reservations');
 };

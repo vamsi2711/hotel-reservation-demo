@@ -79,3 +79,34 @@ describe('EditReservationComponent — check-in field locking', () => {
     expect(screen.getByLabelText(/check-in date/i)).not.toBeDisabled();
   });
 });
+
+describe('EditReservationComponent — date min-attribute restrictions', () => {
+  const initialEntries = ['/reservations/1/edit'];
+
+  it('sets check-in min to today for a fully-future reservation', () => {
+    render(<EditReservationComponent />, {
+      initialState: makeState(FUTURE, FUTURE),
+      initialEntries,
+    });
+
+    expect(screen.getByLabelText(/check-in date/i)).toHaveAttribute('min', TODAY);
+  });
+
+  it('sets check-out min to the same date as check-in for a fully-future reservation (same-day allowed)', () => {
+    render(<EditReservationComponent />, {
+      initialState: makeState(FUTURE, FUTURE),
+      initialEntries,
+    });
+
+    expect(screen.getByLabelText(/check-out date/i)).toHaveAttribute('min', FUTURE);
+  });
+
+  it('sets check-out min to today for an ongoing reservation', () => {
+    render(<EditReservationComponent />, {
+      initialState: makeState(PAST, FUTURE),
+      initialEntries,
+    });
+
+    expect(screen.getByLabelText(/check-out date/i)).toHaveAttribute('min', TODAY);
+  });
+});

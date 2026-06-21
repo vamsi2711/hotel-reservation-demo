@@ -46,7 +46,7 @@ async def is_room_available(
     db, room_id: str, checkin_date: datetime, checkout_date: datetime
 ) -> Dict[str, Any]:
     try:
-        if checkin_date < datetime.now():
+        if checkin_date.date() < datetime.now().date():
             message: str = INVALID_DATE_CHECK_IN
             utils.log_api_message(__name__, message)
             return {"success": False, "errors": [message]}

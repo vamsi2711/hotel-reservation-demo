@@ -34,6 +34,8 @@ export const actionTypes = {
   // Site Components - Auth Component Actions
   AUTH_COMPONENT: 'site/auth/AUTH_COMPONENT',
   LOGIN: 'site/auth/LOGIN',
+  LOGIN_SUCCESS: 'site/auth/LOGIN_SUCCESS',
+  LOGIN_FAILURE: 'site/auth/LOGIN_FAILURE',
   LOGOUT: 'site/auth/LOGOUT',
   CLEAR_USER_DATA: 'site/auth/CLEAR_USER_DATA',
 
@@ -123,4 +125,8 @@ export const actionTypes = {
   // Site Components - Dashboard Actions
   DASHBOARD_COMPONENT: 'site/dashboard/DASHBOARD_COMPONENT',
   GET_DASHBOARD_DATA: 'site/dashboard/GET_DASHBOARD_DATA',
+
+  CHECKOUT_NOW: 'site/reservations/checkout/CHECKOUT_NOW',
+
+  GET_AVAILABLE_ROOMS: 'site/reservations/GET_AVAILABLE_ROOMS',
 };

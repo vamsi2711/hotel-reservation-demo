@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { actionTypes } from '@/shared/base';
-import { Loading } from '@/shared/components';
+import { Loading, ConfirmationModal } from '@/shared/components';
 import utils from '@/shared/utils';
+
+const TODAY = new Date().toISOString().slice(0, 10);
 
 const formatRoomLabel = (id, roomMap) => {
   const num = roomMap?.get(id)?.room_number;
@@ -29,6 +31,7 @@ const ShowReservationComponent = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [checkoutConfirmOpen, setCheckoutConfirmOpen] = useState(false);
 
   const reservation = useSelector((state) => state?.site?.showReservations?.reservation);
   const loading = useSelector((state) => state?.site?.showReservations?.loading);
@@ -55,7 +58,19 @@ const ShowReservationComponent = () => {
     (new Date(checkout + 'T00:00:00') - new Date(checkin + 'T00:00:00')) /
       (1000 * 60 * 60 * 24),
   );
-  const isPast = checkout < new Date().toISOString().slice(0, 10);
+  const isPast = checkout <= TODAY;
+  const isActive = checkin <= TODAY && checkout > TODAY;
+
+  const handleCheckoutConfirm = () => {
+    setCheckoutConfirmOpen(false);
+    dispatch({
+      type: actionTypes.UPDATE_RESERVATION,
+      reservationId: parseInt(id),
+      room_id: reservation.room_id,
+      checkin_date: checkin,
+      checkout_date: TODAY,
+    });
+  };
 
   return (
     <div style={{ backgroundColor: '#f8f9fa', minHeight: '100vh', paddingBottom: '3rem' }}>
@@ -75,6 +90,14 @@ const ShowReservationComponent = () => {
           <h5 className="mb-0 fw-bold text-white flex-grow-1">
             Reservation #{reservation.id}
           </h5>
+          {isActive && (
+            <button
+              className="btn btn-sm btn-success fw-semibold"
+              onClick={() => setCheckoutConfirmOpen(true)}
+            >
+              Check Out Now
+            </button>
+          )}
           {isPast ? (
             <span title="Stay already completed" style={{ cursor: 'not-allowed', display: 'inline-block' }}>
               <button
@@ -117,6 +140,16 @@ const ShowReservationComponent = () => {
         </div>
 
       </div>
+      <ConfirmationModal
+        isOpen={checkoutConfirmOpen}
+        title="Check Out Now?"
+        message="Check out this guest now? This will end the stay today."
+        confirmationText="Check Out"
+        cancellationText="Keep Reservation"
+        confirmButtonStyle="warning"
+        handleConfirm={handleCheckoutConfirm}
+        handleReject={() => setCheckoutConfirmOpen(false)}
+      />
     </div>
   );
 };

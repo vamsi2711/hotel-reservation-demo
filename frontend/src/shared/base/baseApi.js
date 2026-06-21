@@ -3,6 +3,8 @@ import axios from 'axios';
 import { actionTypes } from '@/shared/base';
 
 let instance = null;
+let storeRef = null;
+let apiUrl = '';
 
 const createInstance = (url, token) => {
   return axios.create({
@@ -39,7 +41,7 @@ const handleResponseError = (error, store) => {
   return Promise.reject(error);
 };
 
-const getToken = async (url, credentials = {}) => {
+export const getToken = async (url, credentials = {}) => {
   const formData = new FormData();
   formData.append('grant_type', 'password');
   formData.append('username', credentials.username ?? 'example-user');
@@ -54,21 +56,37 @@ const getToken = async (url, credentials = {}) => {
   return response?.data?.access_token || '';
 };
 
+export const setStore = (store) => {
+  storeRef = store;
+};
+
+export const setApiUrl = (url) => {
+  apiUrl = url;
+};
+
+export const getApiBaseUrl = () => apiUrl;
+
+export const initBaseApi = (url, token) => {
+  instance = createInstance(url, token);
+
+  instance.interceptors.request.use(
+    (config) => handleRequest(config, storeRef),
+    (error) => handleRequestError(error, storeRef),
+  );
+  instance.interceptors.response.use(
+    (response) => handleResponse(response, storeRef),
+    (error) => handleResponseError(error, storeRef),
+  );
+
+  return instance;
+};
+
 export const createBaseApi = async (url, store, credentials = {}) => {
   try {
+    setStore(store);
+    setApiUrl(url);
     const tokenValue = await getToken(url, credentials);
-    instance = createInstance(url, tokenValue);
-
-    instance.interceptors.request.use(
-      (config) => handleRequest(config, store),
-      (error) => handleRequestError(error, store),
-    );
-    instance.interceptors.response.use(
-      (response) => handleResponse(response, store),
-      (error) => handleResponseError(error, store),
-    );
-
-    return instance;
+    return initBaseApi(url, tokenValue);
   } catch (error) {
     throw new Error(`Failed to initialize API: ${error.message}`);
   }

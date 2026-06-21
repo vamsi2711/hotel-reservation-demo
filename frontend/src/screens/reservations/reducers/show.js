@@ -11,6 +11,10 @@ const actionHandlers = {
     reservation: action?.response?.data || null,
     loading: false,
   }),
+  [onSuccessful(actionTypes.UPDATE_RESERVATION)]: (state, action) => ({
+    ...state,
+    reservation: action?.response?.data || state.reservation,
+  }),
 };
 
 const reducer = createComponentReducer(

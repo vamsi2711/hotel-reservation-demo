@@ -8,6 +8,7 @@ import utils from '@/shared/utils';
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
+
 const EditReservationComponent = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -28,7 +29,7 @@ const EditReservationComponent = () => {
   useEffect(() => {
     if (reservation && !formData) {
       const checkoutDate = utils.formatStayDate(reservation.checkout_date);
-      if (checkoutDate < TODAY) {
+      if (checkoutDate <= TODAY) {
         navigate(`/reservations/${id}`);
         return;
       }
@@ -134,6 +135,7 @@ const EditReservationComponent = () => {
                 value={formData.checkin_date}
                 onChange={handleChange}
                 disabled={isOngoing}
+                min={isOngoing ? undefined : TODAY}
                 required
               />
               {isOngoing && (
@@ -158,6 +160,7 @@ const EditReservationComponent = () => {
                 className="form-control"
                 value={formData.checkout_date}
                 onChange={handleChange}
+                min={isOngoing ? TODAY : formData.checkin_date}
                 required
               />
             </div>

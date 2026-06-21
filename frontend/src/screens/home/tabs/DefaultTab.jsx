@@ -8,11 +8,13 @@ import { Loading } from '@/shared/components';
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
+const completedTooltip = 'Stay already completed';
+
 const DefaultTab = ({
   reservations = [],
-  actions = { cancelReservation: () => {} },
+  actions = { cancelReservation: () => {}, checkoutNow: () => {} },
 }) => {
-  const { cancelReservation } = actions;
+  const { cancelReservation, checkoutNow } = actions;
   const loading = useSelector((state) => state?.site?.home?.loading);
   const rooms = useSelector((state) => state?.site?.home?.rooms || []);
   const roomMap = React.useMemo(
@@ -21,91 +23,146 @@ const DefaultTab = ({
   );
 
   return (
-    <div data-name="reservations-tab">
-      <div className="col-lg-12 bg-dark mx-auto">
-        <div className="d-flex justify-content-between align-items-center">
-          <h3>Reservations</h3>
+    <div data-name="reservations-tab" style={{ background: '#f8f9fa', padding: '1.5rem 0.5rem 2rem' }}>
+      <div className="card border-0 shadow-sm">
+        {/* Card header — matches New Reservation and dashboard card pattern */}
+        <div
+          className="card-header d-flex justify-content-between align-items-center py-3 border-0"
+          style={{ background: '#1a2e4a' }}
+        >
+          <h5 className="mb-0 text-white fw-semibold">Reservations</h5>
           <Link to="/reservations/new">
-            <Button variant="warning">Book</Button>
+            <Button variant="warning" size="sm" className="fw-semibold px-3">
+              Book
+            </Button>
           </Link>
         </div>
-        <div className="container flex-column">
-          {loading && reservations.length === 0 && <Loading />}
-          {!loading && reservations.length === 0 && (
-            <div>No reservations exist.</div>
+
+        <div className="card-body p-0">
+          {loading && reservations.length === 0 && (
+            <div className="p-4">
+              <Loading />
+            </div>
           )}
+
+          {!loading && reservations.length === 0 && (
+            <div className="p-5 text-center text-muted">
+              <p className="mb-2" style={{ fontSize: '0.95rem' }}>No reservations yet.</p>
+              <Link to="/reservations/new">
+                <Button variant="warning" size="sm" className="fw-semibold">
+                  Book your first stay
+                </Button>
+              </Link>
+            </div>
+          )}
+
           {reservations.length > 0 && (
-            <table className="table bg-light">
-              <thead>
-                <tr>
-                  <th scope="col">Room Identifier</th>
-                  <th scope="col">Check-In</th>
-                  <th scope="col">Check-Out</th>
-                  <th scope="col">Total Charge</th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {reservations.map((reservation) => {
-                  const isPast =
-                    (reservation?.checkout_date?.slice(0, 10) || '') < TODAY;
-                  const completedTooltip = 'Stay already completed';
-                  return (
-                    <tr key={reservation?.id}>
-                      <td>
-                        {roomMap.get(reservation?.room_id)?.room_number
-                          ? `Room ${roomMap.get(reservation?.room_id).room_number}`
-                          : `Room …${reservation?.room_id?.slice(-8)}`}
-                      </td>
-                      <td>{utils.formatStayDate(reservation?.checkin_date)}</td>
-                      <td>{utils.formatStayDate(reservation?.checkout_date)}</td>
-                      <td>
-                        {utils.formatNumberAsMoney(reservation?.total_charge)}
-                      </td>
-                      <td>
-                        <Link to={`/reservations/${reservation.id}`}>
-                          <Button variant="primary">View</Button>
-                        </Link>
-                      </td>
-                      <td>
-                        {isPast ? (
-                          <span title={completedTooltip} style={{ cursor: 'not-allowed', display: 'inline-block' }}>
-                            <Button variant="info" disabled style={{ pointerEvents: 'none', opacity: 0.45 }}>
-                              Edit
-                            </Button>
-                          </span>
-                        ) : (
-                          <Link to={`/reservations/${reservation.id}/edit`}>
-                            <Button variant="info">Edit</Button>
-                          </Link>
-                        )}
-                      </td>
-                      <td>
-                        {isPast ? (
-                          <span title={completedTooltip} style={{ cursor: 'not-allowed', display: 'inline-block' }}>
-                            <Button variant="danger" disabled style={{ pointerEvents: 'none', opacity: 0.45 }}>
-                              Cancel
-                            </Button>
-                          </span>
-                        ) : (
-                          <Button
-                            onClick={() =>
-                              cancelReservation &&
-                              cancelReservation(Number(reservation.id))
-                            }
-                            variant="danger"
-                          >
-                            Cancel
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="table-responsive">
+              <table className="table table-hover table-striped reservations-table mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Room</th>
+                    <th scope="col">Check-In</th>
+                    <th scope="col">Check-Out</th>
+                    <th scope="col">Total Charge</th>
+                    <th scope="col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reservations.map((reservation) => {
+                    const checkoutDate = reservation?.checkout_date?.slice(0, 10) || '';
+                    const checkinDate = reservation?.checkin_date?.slice(0, 10) || '';
+                    const isPast = checkoutDate <= TODAY;
+                    const isActive = checkinDate <= TODAY && checkoutDate > TODAY;
+
+                    return (
+                      <tr key={reservation?.id}>
+                        <td>
+                          {roomMap.get(reservation?.room_id)?.room_number
+                            ? `Room ${roomMap.get(reservation?.room_id).room_number}`
+                            : `Room …${reservation?.room_id?.slice(-8)}`}
+                        </td>
+                        <td>{utils.formatStayDate(reservation?.checkin_date)}</td>
+                        <td>{utils.formatStayDate(reservation?.checkout_date)}</td>
+                        <td>{utils.formatNumberAsMoney(reservation?.total_charge)}</td>
+                        <td>
+                          <div className="d-flex gap-2 flex-wrap align-items-center">
+                            <Link to={`/reservations/${reservation.id}`}>
+                              <Button variant="primary" size="sm">View</Button>
+                            </Link>
+
+                            {isPast ? (
+                              <span
+                                title={completedTooltip}
+                                style={{ cursor: 'not-allowed', display: 'inline-block' }}
+                              >
+                                <Button
+                                  variant="info"
+                                  size="sm"
+                                  disabled
+                                  style={{ pointerEvents: 'none', opacity: 0.45 }}
+                                >
+                                  Edit
+                                </Button>
+                              </span>
+                            ) : (
+                              <Link to={`/reservations/${reservation.id}/edit`}>
+                                <Button variant="info" size="sm">Edit</Button>
+                              </Link>
+                            )}
+
+                            {isPast ? (
+                              <span
+                                title={completedTooltip}
+                                style={{ cursor: 'not-allowed', display: 'inline-block' }}
+                              >
+                                <Button
+                                  variant="danger"
+                                  size="sm"
+                                  disabled
+                                  style={{ pointerEvents: 'none', opacity: 0.45 }}
+                                >
+                                  Cancel
+                                </Button>
+                              </span>
+                            ) : (
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() =>
+                                  cancelReservation &&
+                                  cancelReservation(Number(reservation.id))
+                                }
+                              >
+                                Cancel
+                              </Button>
+                            )}
+
+                            {isActive && (
+                              <Button
+                                variant="success"
+                                size="sm"
+                                className="fw-semibold"
+                                onClick={() =>
+                                  checkoutNow &&
+                                  checkoutNow({
+                                    reservationId: Number(reservation.id),
+                                    room_id: reservation.room_id,
+                                    checkin_date: utils.formatStayDate(reservation.checkin_date),
+                                  })
+                                }
+                              >
+                                Check Out Now
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>

@@ -1,12 +1,15 @@
 import {
   actionTypes,
   createComponentReducer,
+  onFailure,
   onSuccessful,
 } from '@/shared/base';
 
 const initialState = {
   rooms: [],
   loading: true,
+  availableRooms: null,
+  availableRoomsLoading: false,
 };
 
 const actionHandlers = {
@@ -23,6 +26,21 @@ const actionHandlers = {
       loading: false,
     };
   },
+  [actionTypes.GET_AVAILABLE_ROOMS]: (state) => ({
+    ...state,
+    availableRoomsLoading: true,
+    availableRooms: null,
+  }),
+  [onSuccessful(actionTypes.GET_AVAILABLE_ROOMS)]: (state, action) => ({
+    ...state,
+    availableRoomsLoading: false,
+    availableRooms: action?.response?.data || [],
+  }),
+  [onFailure(actionTypes.GET_AVAILABLE_ROOMS)]: (state) => ({
+    ...state,
+    availableRoomsLoading: false,
+    availableRooms: [],
+  }),
 };
 
 const reducer = createComponentReducer(

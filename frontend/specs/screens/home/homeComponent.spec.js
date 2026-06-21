@@ -102,6 +102,60 @@ describe('HomeComponent', () => {
     expect(screen.getByRole('button', { name: /Edit/i })).not.toBeDisabled();
   });
 
+  it('shows Check Out Now only for active reservations (checked in, not yet checked out)', () => {
+    const initialState = makeState([
+      {
+        id: '1',
+        room_id: 'room-id-1',
+        checkin_date: '2020-01-01',
+        checkout_date: '2020-01-02', // past
+        total_charge: 100,
+      },
+      {
+        id: '2',
+        room_id: 'room-id-2',
+        checkin_date: '2020-01-01',
+        checkout_date: '2099-12-31', // active: checked in, not yet checked out
+        total_charge: 200,
+      },
+      {
+        id: '3',
+        room_id: 'room-id-1',
+        checkin_date: '2030-01-01',
+        checkout_date: '2030-12-31', // future
+        total_charge: 300,
+      },
+    ]);
+
+    render(ui, { initialState, initialEntries });
+
+    const checkoutBtns = screen.getAllByRole('button', { name: /Check Out Now/i });
+    expect(checkoutBtns).toHaveLength(1);
+  });
+
+  it('does not show Check Out Now for past or future reservations', () => {
+    const initialState = makeState([
+      {
+        id: '998',
+        room_id: 'room-id-1',
+        checkin_date: '2021-01-01',
+        checkout_date: '2021-01-02', // past
+        total_charge: 100,
+      },
+      {
+        id: '999',
+        room_id: 'room-id-2',
+        checkin_date: '2030-01-01',
+        checkout_date: '2030-12-31', // future
+        total_charge: 200,
+      },
+    ]);
+
+    render(ui, { initialState, initialEntries });
+
+    expect(screen.queryByRole('button', { name: /Check Out Now/i })).not.toBeInTheDocument();
+  });
+
   it('disables past-reservation buttons and keeps future-reservation buttons active when both are present', () => {
     const initialState = makeState([
       {

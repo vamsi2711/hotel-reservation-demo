@@ -32,7 +32,11 @@ def convert_to_local_date(dt_utc: datetime) -> datetime:
 
 
 def convert_to_local_date_from_str(date_str: str) -> datetime:
-    return datetime.strptime(date_str, "%Y-%m-%d")
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        # Handle ISO datetime strings from the DB (e.g. "2026-06-20T00:00:00+00:00")
+        return datetime.fromisoformat(date_str).replace(tzinfo=None)
 
 
 def get_calling_function_name() -> str:
