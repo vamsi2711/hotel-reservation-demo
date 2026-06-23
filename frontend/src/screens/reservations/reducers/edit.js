@@ -13,6 +13,13 @@ const actionHandlers = {
     reservation: action?.response?.data || null,
     loading: false,
   }),
+  // Reset stale updateSuccess flag every time the edit page mounts and fetches rooms.
+  // Without this, a second save never triggers useEffect([updateSuccess]) because
+  // the value stays true (true → true is not a change React detects).
+  [actionTypes.GET_ROOM_IDS]: (state) => ({
+    ...state,
+    updateSuccess: false,
+  }),
   [onSuccessful(actionTypes.GET_ROOM_IDS)]: (state, action) => ({
     ...state,
     rooms: action?.response?.data || [],

@@ -32,6 +32,103 @@ const makeState = (checkin, checkout) => ({
 
 const initialEntries = ['/reservations/1'];
 
+describe('ShowReservationComponent — Back button navigation', () => {
+  it('falls back to /home when there is no browser history (window.history.length <= 1)', () => {
+    const store = mockStore(makeState(PAST, FUTURE));
+
+    // JSDOM always has window.history.length === 1, so the fallback path fires.
+    tlRender(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={['/reservations/1']}>
+          <Routes>
+            <Route path="/home" element={<div>Home Page</div>} />
+            <Route path="/reservations/:id" element={<ShowReservationComponent />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /← Back/i }));
+
+    expect(screen.getByText('Home Page')).toBeInTheDocument();
+  });
+});
+
+describe('ShowReservationComponent — renders immediately after UPDATE_RESERVATION (bug fix)', () => {
+  // Simulate arriving at the show page right after a successful edit:
+  // showReservations has the updated reservation AND loading: false
+  // (the reducer now clears loading on UPDATE_RESERVATION success).
+  it('renders reservation details without a spinner when loading is false and reservation is present', () => {
+    const state = {
+      shared: { ...defaultShared },
+      router: { location: { pathname: '/reservations/1' } },
+      site: {
+        showReservations: {
+          loading: false,
+          reservation: {
+            id: '1',
+            room_id: 'room-id-1',
+            checkin_date: FUTURE,
+            checkout_date: FUTURE,
+            total_charge: 500,
+          },
+        },
+        home: { rooms: [{ id: 'room-id-1', room_number: 101 }] },
+      },
+    };
+
+    render(<ShowReservationComponent />, {
+      initialState: state,
+      initialEntries: ['/reservations/1'],
+    });
+
+    expect(screen.getByText('Reservation #1')).toBeInTheDocument();
+    // Edit button must be a functional link (not disabled)
+    expect(screen.getByRole('link', { name: /Edit/i })).toBeInTheDocument();
+  });
+
+  it('shows spinner (and hides detail) when loading is still true', () => {
+    const state = {
+      shared: { ...defaultShared },
+      router: { location: { pathname: '/reservations/1' } },
+      site: {
+        showReservations: { loading: true, reservation: null },
+        home: { rooms: [] },
+      },
+    };
+
+    render(<ShowReservationComponent />, {
+      initialState: state,
+      initialEntries: ['/reservations/1'],
+    });
+
+    expect(screen.queryByText(/Reservation #/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('ShowReservationComponent — Back button forwards fromTab to /home', () => {
+  it('navigates to /home with state.activeTab when location.state.fromTab is set', () => {
+    const store = mockStore(makeState(FUTURE, FUTURE));
+
+    tlRender(
+      <Provider store={store}>
+        <MemoryRouter
+          initialEntries={[{ pathname: '/reservations/1', state: { fromTab: 'calendar' } }]}
+        >
+          <Routes>
+            <Route path="/home" element={<div>Home Calendar</div>} />
+            <Route path="/reservations/:id" element={<ShowReservationComponent />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /← Back/i }));
+
+    expect(screen.getByText('Home Calendar')).toBeInTheDocument();
+  });
+});
+
 describe('ShowReservationComponent — Check Out Now button visibility', () => {
   it('shows Check Out Now for an active reservation (checked in, not yet checked out)', () => {
     render(<ShowReservationComponent />, {

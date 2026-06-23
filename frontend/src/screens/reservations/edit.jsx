@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { actionTypes } from '@/shared/base';
-import { Loading } from '@/shared/components';
+import { ConfirmationModal, Loading } from '@/shared/components';
 import utils from '@/shared/utils';
 
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -13,6 +13,7 @@ const EditReservationComponent = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const reservation = useSelector((state) => state?.site?.editReservations?.reservation);
   const rooms = useSelector((state) => state?.site?.editReservations?.rooms || []);
@@ -20,6 +21,11 @@ const EditReservationComponent = () => {
   const updateSuccess = useSelector((state) => state?.site?.editReservations?.updateSuccess);
 
   const [formData, setFormData] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  // Tracks whether THIS component mount initiated a save — resets to false on every remount,
+  // which prevents the stale Redux updateSuccess:true from triggering a redirect loop when
+  // the user navigates back to the edit page after a successful save.
+  const saveInitiated = useRef(false);
 
   useEffect(() => {
     dispatch({ type: actionTypes.GET_RESERVATION, id: parseInt(id) });
@@ -42,8 +48,10 @@ const EditReservationComponent = () => {
   }, [reservation]);
 
   useEffect(() => {
-    if (updateSuccess) {
-      navigate(`/reservations/${id}`);
+    if (updateSuccess && saveInitiated.current) {
+      navigate('/home', {
+        state: { activeTab: location.state?.fromTab || 'reservations' },
+      });
     }
   }, [updateSuccess]);
 
@@ -54,6 +62,12 @@ const EditReservationComponent = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = () => {
+    setConfirmOpen(false);
+    saveInitiated.current = true;
     dispatch({
       type: actionTypes.UPDATE_RESERVATION,
       reservationId: parseInt(id),
@@ -83,7 +97,7 @@ const EditReservationComponent = () => {
       >
         <button
           className="btn btn-sm btn-light fw-semibold"
-          onClick={() => navigate(`/reservations/${id}`)}
+          onClick={() => navigate(-1)}
         >
           ← Cancel
         </button>
@@ -172,7 +186,7 @@ const EditReservationComponent = () => {
               <button
                 type="button"
                 className="btn btn-outline-secondary"
-                onClick={() => navigate(`/reservations/${id}`)}
+                onClick={() => navigate(-1)}
               >
                 Cancel
               </button>
@@ -181,6 +195,16 @@ const EditReservationComponent = () => {
         </div>
       </div>
     </div>
+    <ConfirmationModal
+      isOpen={confirmOpen}
+      title="Save Changes?"
+      message="Are you sure you want to update this reservation?"
+      confirmationText="Save"
+      cancellationText="Cancel"
+      confirmButtonStyle="primary"
+      handleConfirm={handleConfirmSave}
+      handleReject={() => setConfirmOpen(false)}
+    />
     </div>
   );
 };

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Nav, Tab } from 'react-bootstrap';
+import { useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 import { actionTypes, connectComponent } from '@/shared/base';
@@ -36,16 +37,22 @@ const HomeComponent = ({
   const reservations = useSelector((state) => state?.site?.home?.reservations);
   const tabActions = { cancelReservation, checkoutNow };
 
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'reservations');
+
   return (
     <div data-name="home-component" className="col-lg-12">
       <div className="jumbotron p-3 p-md-12 text-white rounded bg-dark">
-        <Tab.Container defaultActiveKey="reservations">
+        <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
           <Nav
             className="home-tabs-nav"
             style={{ borderBottom: '1px solid rgba(255,255,255,0.15)' }}
           >
             <Nav.Item>
               <Nav.Link eventKey="reservations">Reservations</Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link eventKey="calendar">Calendar</Nav.Link>
             </Nav.Item>
             <Nav.Item>
               <Nav.Link eventKey="about">About</Nav.Link>
@@ -57,6 +64,9 @@ const HomeComponent = ({
                 reservations={reservations}
                 actions={tabActions}
               />
+            </Tab.Pane>
+            <Tab.Pane eventKey="calendar">
+              <HomeTabs.CalendarTab />
             </Tab.Pane>
             <Tab.Pane eventKey="about">
               <HomeTabs.AboutTab />

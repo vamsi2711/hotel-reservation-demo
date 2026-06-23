@@ -1,4 +1,5 @@
-import DefaultTab from './DefaultTab';
 import AboutTab from './AboutTab';
+import CalendarTab from './CalendarTab';
+import DefaultTab from './DefaultTab';
 
-export default { AboutTab, DefaultTab };
+export default { AboutTab, CalendarTab, DefaultTab };

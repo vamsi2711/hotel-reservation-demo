@@ -14,6 +14,7 @@ const actionHandlers = {
   [onSuccessful(actionTypes.UPDATE_RESERVATION)]: (state, action) => ({
     ...state,
     reservation: action?.response?.data || state.reservation,
+    loading: false,
   }),
 };
 

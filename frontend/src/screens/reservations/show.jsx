@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { actionTypes } from '@/shared/base';
@@ -31,6 +31,8 @@ const ShowReservationComponent = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromTab = location.state?.fromTab;
   const [checkoutConfirmOpen, setCheckoutConfirmOpen] = useState(false);
 
   const reservation = useSelector((state) => state?.site?.showReservations?.reservation);
@@ -83,7 +85,13 @@ const ShowReservationComponent = () => {
         >
           <button
             className="btn btn-sm btn-light fw-semibold"
-            onClick={() => navigate('/')}
+            onClick={() => {
+              if (fromTab) {
+                navigate('/home', { state: { activeTab: fromTab } });
+              } else {
+                window.history.length > 1 ? navigate(-1) : navigate('/home');
+              }
+            }}
           >
             ← Back
           </button>
@@ -111,6 +119,7 @@ const ShowReservationComponent = () => {
           ) : (
             <Link
               to={`/reservations/${id}/edit`}
+              state={{ fromTab }}
               className="btn btn-sm btn-warning fw-semibold"
             >
               Edit
